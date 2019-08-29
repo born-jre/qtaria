@@ -27,12 +27,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     addnewdialog.cpp \
     ariawarapper.cpp \
-    objectholder.cpp
+    objectholder.cpp \
+    handlers/curlhandlers.cpp
 
 HEADERS  += mainwindow.h \
     addnewdialog.h \
     ariawarapper.h \
-    objectholder.h
+    objectholder.h \
+    types.h \
+    handlers/handlers.h \
+    handlers/curlhandlers.h
 
 FORMS    += mainwindow.ui \
     addnewdialog.ui
@@ -43,6 +47,7 @@ LIBS += -L/usr/lib -laria2
 QMAKE_CXXFLAGS += -std=c++1y
 
 unix:!macx: LIBS += -L$$PWD/lib/ -laria2
+LIBS += -lcurl
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.

@@ -10,13 +10,23 @@
 #include <QHBoxLayout>
 #include <QMap>
 #include <QWidget>
-#include<QList>
+#include <QList>
+#include <QListWidget>
 #include <iostream>
+
+
 #include "addnewdialog.h"
-#include "ariawarapper.h"
-#include <aria2/aria2.h>
-#include "objectholder.h"
+#include "core/handlers/qtweb/qtwebhandler.h"
+#include "core/managers/uimanager/uielementgroup.h"
+#include "core/handlers/downloaderinterface.h"
+#include "core/managers/uimanager/uielementgroup.h"
+
+#include "core/managers/uimanager/listwidget.h"
+
+#define BUFFMAXUIELEMENTS 10
+
 class addNewDialog;
+
 namespace Ui {
 class MainWindow;
 }
@@ -24,32 +34,50 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     QThread worker;
-signals:
-    void operate();
-    void opdate();
-    void addNewDownload( QString url, QString location);
+    Ui::MainWindow *ui;
+    addNewDialog *newDialog;
+    DownloaderInterface *myDownloader;
+
+    /*map to hold id and item in list of items in ui*/
+    QMap<qint32, uielementgroup*> map_of_uielements;
+
+    QMap<qint32, listwidget*> map_of_widgets;
+    QListWidget qw;
+
+  qint32 _id = 0; /*id for map*/
+
+    /*list of buffer to hold some empty ui elements*/
+    QList<uielementgroup*> list_of_uielements;
+
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
-    void emitAddNewDownload(QString url,QString location);
+
+    void emitAddNewDownload(QString url,QString location); //add new download btn
+
+    /*ui elements managing stuff*/
+    void init_ui_elements();
+  listwidget * new_ui_element();
+    void delete_ui_element(qint32 id);
+
+
+    ~MainWindow() final;
 
 private slots:
     void on_actionAddNew_triggered();
-private:
-    Ui::MainWindow *ui;
-    addNewDialog *newDialog;
-    ariawarapper *dl_handle;
-    QTimer *timer;
-    QLabel *label;
-    QMap<uint, objectHolder*> dlList;
-    QList<objectHolder*> list_of_objholder;
 public slots:
-    void globalDownloadStat(int inactive, int active, int gdl, int gup);
-    void downloadStatPerItem(uint id, int completed, int total,int perDl, int perUp); //update download progress to ui
-    void finishAddNew(uint fid);
-    //we are using uint because its closest to aria2::A2Gid and valid for Qmeta stuff
-    //do't know it can hod A2Gid value without overflow
+    void slot_update_item_stats(qint32 id, QString progress);
+    void slot_update_global_stats(QString progress);
+    void slot_download_added(qint32 id);
+    void slot_error_occured(qint32 id);
+    void slot_paused(qint32 id);
+    void slot_resumed(qint32 id);
+    void slot_deleted(qint32 id);
+    void slot_downloadfinished(qint32 id);
 
+  /* slots for ui*/
+  void pausepressed(qint32 id) {};
+  void resumepresed(qint32 id) {};
+  void deletepressed(qint32 id) {};
 };
 
 #endif // MAINWINDOW_H

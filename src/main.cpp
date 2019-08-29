@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "ariawarapper.h"
 #include <QApplication>
 #include <QThreadStorage>
 int main(int argc, char *argv[])

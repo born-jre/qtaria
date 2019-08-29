@@ -8,3 +8,6 @@ src/*.user
 src/*.user.*
 src/*.autosave
 *-Debug
+build
+src/.idea/
+src/cmake-build-debug/

@@ -7,29 +7,48 @@ MainWindow::MainWindow(QWidget *parent) :
 {
       ui->setupUi(this);
 
-      dl_handle = new ariawarapper;
-      dl_handle->moveToThread(&worker);
-      worker.start();
+    myDownloader = new qtwebhandler();
+    myDownloader->moveToThread(&worker);
+    worker.start();
+    
+    //connects 
+    connect(myDownloader,&DownloaderInterface::signal_update_item_stats,this,&MainWindow::slot_update_item_stats);
+   // connect(myDownloader,&DownloaderInterface::signal_update_global_stats,this,&MainWindow::slot_update_item_stats);
+    connect(myDownloader,&DownloaderInterface::signal_download_added,this,&MainWindow::slot_download_added);
+    connect(myDownloader,&DownloaderInterface::signal_error_occured,this,&MainWindow::slot_error_occured);
+    connect(myDownloader,&DownloaderInterface::signal_paused,this,&MainWindow::slot_paused);
+    connect(myDownloader,&DownloaderInterface::signal_resumed,this,&MainWindow::slot_resumed);
+    connect(myDownloader,&DownloaderInterface::signal_deleted,this,&MainWindow::slot_deleted);
+    connect(myDownloader,&DownloaderInterface::signal_downloadfinished,this,&MainWindow::slot_downloadfinished);
 
-      timer = new QTimer(this);
-      label = new QLabel(this);
-
-      connect(timer, SIGNAL(timeout()), dl_handle, SLOT(update()));
-      connect(dl_handle,&ariawarapper::globalDownloadStat,this,&MainWindow::globalDownloadStat);
-      connect(dl_handle,&ariawarapper::downloadStatPerItem,this,&MainWindow::downloadStatPerItem,Qt::BlockingQueuedConnection);
-      connect(dl_handle,&ariawarapper::finishAddNew,this,&MainWindow::finishAddNew);
-      connect(this,&MainWindow::addNewDownload, dl_handle,&ariawarapper::addNewDownload);
-      for(int i = 0; i<10; i++) {
-          objectHolder * temp_objh = new objectHolder(this);
-          ui->verticalLayout_4->addWidget(temp_objh->groupw,0,Qt::AlignTop);
-          list_of_objholder.prepend(temp_objh);
-      }
-
+  ui->verticalLayout_4->addWidget(&qw);
 }
 
 MainWindow::~MainWindow()
 {
+
     delete ui;
+}
+
+/*since addnewdialog (dialog to input new url)  cannot call downloadmanager so it
+ * passes new url and stuff to mainwindow and it passes into downloadmanager*/
+void MainWindow::emitAddNewDownload(QString url,QString location)
+{
+    //  http://speed.hetzner.de/100MB.bin
+    //  QString url = "  http://ipv4.download.thinkbroadband.com/5MB.zip  ";
+
+    myDownloader->addNewDownload(url, new_ui_element()->id);
+
+}
+
+
+listwidget * MainWindow::new_ui_element() {
+  auto lw = new listwidget(&qw);
+  map_of_widgets.insert(lw->id, lw);
+  return lw;
+}
+
+void MainWindow::delete_ui_element(qint32 id) {
 
 }
 
@@ -39,51 +58,36 @@ void MainWindow::on_actionAddNew_triggered()
     newDialog->show();
 
 }
-void MainWindow::globalDownloadStat(int inactive, int active, int gdl, int gup)
-{
-    QString message = QString("Inactive:%1 Active:%2 Speed down:%3KB/s up:%4KB/s").arg(inactive).arg(active).arg(gdl/1024).arg(gup/1024);
-    statusBar()->showMessage(message);
-}
-void MainWindow::downloadStatPerItem(uint id, int completed, int total,int perDl, int perUp)
-{
-    objectHolder * temp_objh = dlList.value(id); //take out one item from list
-    int percentage;
-    if(total == 0 || total == -1) {
-        std::cout<<"error"<<total;
-        return;
-    }
-    else if(total == -2 ) {
-        percentage = 100;
-    } else {
-        percentage = completed * 100 / total;
-    }
-    QString message = QString("ID %1 Downloaded:%2|%3[ %6% ] Speed D%4KB/s U%5KB/s").arg(id).arg(completed).arg(total).arg(perDl).arg(perUp).arg(percentage);
-    temp_objh->info->setText(message);
-}
-void MainWindow::emitAddNewDownload(QString url,QString location)
-{
-    //        http://speed.hetzner.de/100MB.bin
-    //QString url = "  http://ipv4.download.thinkbroadband.com/5MB.zip  ";
 
-    timer->start(100);
-    dl_handle->addNewDownload(url, location); //emit addNewDownload(url, location);
-}
-void MainWindow::finishAddNew(uint fid)
-{
-
-    if (fid == 0) {
-        std::cout<<"error";
-        return;
-    }
-    objectHolder * temp_objh;
-    if(list_of_objholder.isEmpty()) {
-        dlList.insert(fid, new objectHolder(this));
-        temp_objh = dlList.value(fid);
-        ui->verticalLayout_4->addWidget(temp_objh->groupw,0,Qt::AlignTop);
-    } else {
-        temp_objh = list_of_objholder.takeLast();
-        dlList.insert(fid, temp_objh);
-    }
-    temp_objh->activate();
+void MainWindow::slot_update_item_stats( qint32 id, QString progress) {
 
 }
+
+void MainWindow::slot_update_global_stats(QString progress) {
+
+}
+
+void MainWindow::slot_download_added(qint32 id) {
+
+}
+
+void MainWindow::slot_paused(qint32 id) {
+
+}
+
+void MainWindow::slot_error_occured(qint32 id) {
+
+}
+
+void MainWindow::slot_resumed(qint32 id) {
+
+}
+
+void MainWindow::slot_deleted(qint32 id) {
+
+}
+
+void MainWindow::slot_downloadfinished(qint32 id) {
+
+}
+
